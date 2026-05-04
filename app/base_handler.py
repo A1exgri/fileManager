@@ -1,5 +1,9 @@
 from http.server import BaseHTTPRequestHandler
-from app.settings import STATIC_PATH, STATIC_DIR
+from app.settings import STATIC_PATH, STATIC_DIR, MEDIA_DIR
+import multipart
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BasicHandler(BaseHTTPRequestHandler):
@@ -19,11 +23,11 @@ class BasicHandler(BaseHTTPRequestHandler):
     @staticmethod
     def load_static(filename: str) -> bytes:
         try:
-            print( f'{STATIC_PATH}/{filename}')
+            print(f'{STATIC_PATH}/{filename}')
             with open(f'{STATIC_PATH}/{filename}', 'rb') as file:
                 return file.read()
         except FileNotFoundError:
-                return b'Not Found'
+            return b'Not Found'
 
     def template_response(self, template_filename: str) -> None:
         print('template_filename', template_filename)
@@ -40,3 +44,24 @@ class BasicHandler(BaseHTTPRequestHandler):
             content_type = 'application/octet-stream'
         self.html_response(self.load_static(filename), content_type)
 
+    def parse_multipart(self, content_type: str, options: dict, content_length: int, filename: str = None) -> None:
+        if content_type == "multipart/form-data" and "boundary" in options:
+            parser = multipart.MultipartParser(
+                self.rfile,
+                boundary=options["boundary"],
+                content_length=content_length
+            )
+
+            for part in parser:
+                if part.filename:
+                    logger.info(f'{part.name}: File upload ({part.size}) bytes')
+                    part.save_as(f'{MEDIA_DIR}/{filename or part.filename}')
+
+            for part in parser.parts():
+                part.close()
+        self.response('Got your file', 'text/plain')
+
+    def upload_file(self, filename: str = None) -> None:
+        content_type, options = multipart.parse_options_header(self.headers["Content-Type"])
+        content_length = int(self.headers['Content-Length'])
+        self.parse_multipart(content_type, options, content_length, filename)
