@@ -1,4 +1,9 @@
+import logging
+import uuid
+
 from app.base_handler import BasicHandler
+
+logger = logging.getLogger(__name__)
 
 
 class ImageHostingHandler(BasicHandler):
@@ -16,6 +21,8 @@ class ImageHostingHandler(BasicHandler):
 
     def do_POST(self):
         if self.path == '/api/upload':
+            unique_id = str(uuid.uuid4())
+            self.upload_file(unique_id)
             self.upload_file()
         else:
             self.html_response("Method Not Allowed", status_code=404)

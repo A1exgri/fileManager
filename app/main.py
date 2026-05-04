@@ -1,12 +1,18 @@
 from http.server import HTTPServer
 import logging
-import settings
+from settings import LOG_PATH
 from app.image_hosting_handler import ImageHostingHandler
 
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    datefmt='%Y-%m-%dT%H:%M%S')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    datefmt='%Y-%m-%dT%H:%M%S',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(LOG_PATH / 'server.log')
+    ]
+    )
 
 logger = logging.getLogger(__name__)
 
