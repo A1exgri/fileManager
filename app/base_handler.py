@@ -1,6 +1,6 @@
 import json
 from http.server import BaseHTTPRequestHandler
-from app.settings import STATIC_PATH, MEDIA_DIR, IMAGE_EXTENSIONS, MAX_FILE_SIZE
+from app.settings import STATIC_PATH, MEDIA_DIR, IMAGE_EXTENSIONS, MAX_FILE_SIZE, MEDIA_PATH
 from multipart import MultipartPart, MultipartParser, parse_options_header
 import logging
 
@@ -17,8 +17,8 @@ class BasicHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data if isinstance(data, bytes) else data.encode('utf-8'))
 
-    def html_response(self, data: str | bytes, content_type: str = 'text/html', status_code=200) -> None:
-        self.response(data, content_type, status_code)
+    def html_response(self, data: str | bytes, status_code=200) -> None:
+        self.response(data, 'text/html', status_code)
 
     def json_response(self, data: dict | list | str | bytes, status_code=200) -> None:
         if isinstance(data, (dict, list)):
@@ -26,18 +26,19 @@ class BasicHandler(BaseHTTPRequestHandler):
         self.response(data, 'application/json', status_code)
 
     @staticmethod
-    def load_static(filename: str) -> bytes:
+    def load_file(filename: str, directory=STATIC_PATH) -> bytes:
         try:
-            print(f'{STATIC_PATH}/{filename}')
-            with open(f'{STATIC_PATH}/{filename}', 'rb') as file:
+            with open(f'{directory}/{filename}', 'rb') as file:
                 return file.read()
         except FileNotFoundError:
             return b'Not Found'
+        except ValueError:
+            return b'Not Found'
 
     def template_response(self, template_filename: str) -> None:
-        self.html_response(self.load_static(template_filename))
+        self.html_response(self.load_file(template_filename))
 
-    def send_file(self, filename) -> None:
+    def send_static_file(self, filename: str) -> None:
         if filename.endswith('.png'):
             content_type = 'image/png'
         elif filename.endswith('.css'):
@@ -46,7 +47,10 @@ class BasicHandler(BaseHTTPRequestHandler):
             content_type = "application/javascript"
         else:
             content_type = 'application/octet-stream'
-        self.html_response(self.load_static(filename), content_type)
+        self.response(self.load_file(filename), content_type)
+
+    def send_media_file(self, filename: str) -> None:
+        self.response(self.load_file(filename, MEDIA_PATH), 'image/png')
 
     def validate_file(self, file: MultipartPart) -> bool:
         name, ext = file.filename.split('.')
@@ -69,7 +73,8 @@ class BasicHandler(BaseHTTPRequestHandler):
             for part in parser:
                 if self.validate_file(part):
                     logger.info(f'{part.name}: File upload ({part.size}) bytes')
-                    file = f"{filename}.{part.filename.split('.')[1]}" or part.filename
+                    ext = part.filename.split('.')[-1] if '.' in part.filename else ''
+                    file = f"{filename}.{ext}" if filename else part.filename
                     part.save_as(f'{MEDIA_DIR}/{file}')
                 else:
                     logger.info(f'Invalid file type image {part.name}')
@@ -80,7 +85,7 @@ class BasicHandler(BaseHTTPRequestHandler):
         else:
             self.response('Request w/out Form', status_code=400)
             return
-        self.response('File upload successfuly', status_code=201)
+        self.response('File upload successfully', status_code=201)
 
     def upload_file(self, filename: str = None) -> None:
         content_type, options = parse_options_header(self.headers['Content-Type'])
