@@ -35,10 +35,13 @@ class ImageHostingHandler(BasicHandler):
         if self.path == '/api/upload':
             unique_id = str(uuid.uuid4())
             filename = self.upload_file(unique_id)
-            self.json_response({
-                'message': 'File uploaded successfully',
-                'filename': filename
-            }, status_code=201)
+            if filename:
+                self.json_response({
+                    'message': 'File uploaded successfully',
+                    'filename': filename
+                }, status_code=201)
+            else:
+                self.json_response({'message': 'Invalid file type or file size'}, status_code=404)
         else:
             self.html_response("Method Not Allowed", status_code=404)
 
