@@ -262,8 +262,12 @@ body {
     align-items: center;
 }
 
+.file-col-image {
+    flex-basis: 15%;
+}
+
 .file-col-name {
-    flex-basis: 35%;
+    flex-basis: 25%;
 }
 
 .file-col-url {

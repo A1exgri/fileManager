@@ -29,10 +29,14 @@ class ImageHostingHandler(BasicHandler):
             self.html_response('Not Found', status_code=404)
 
     def do_POST(self):
+        logger.info(f"POST {self.client_address[0]}: {self.path}")
         if self.path == '/api/upload':
             unique_id = str(uuid.uuid4())
-            self.upload_file(unique_id)
-            self.upload_file()
+            filename = self.upload_file(unique_id)
+            self.json_response({
+                'message': 'File uploaded successfully',
+                'filename': filename
+            }, status_code=201)
         else:
             self.html_response("Method Not Allowed", status_code=404)
 
