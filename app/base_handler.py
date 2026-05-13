@@ -56,14 +56,11 @@ class BasicHandler(BaseHTTPRequestHandler):
     def validate_file(self, file: MultipartPart) -> bool:
         name, ext = file.filename.split('.')
         if not ext:
-            self.response(f'Invalid file type. Allowed types {IMAGE_EXTENSIONS}', status_code=400)
             return False
 
         if ext.lower() not in IMAGE_EXTENSIONS:
-            self.response(f'Invalid file type. Allowed types {IMAGE_EXTENSIONS}', status_code=400)
             return False
         if file.size > MAX_FILE_SIZE:
-            self.response('The size of the uploaded files is too large', status_code=400)
             return False
         temp_file = f'temp.{ext}'
         file.save_as(temp_file)
@@ -91,7 +88,7 @@ class BasicHandler(BaseHTTPRequestHandler):
                     return file
                 else:
                     logger.info(f'Invalid file type image {part.name}')
-                    return
+                    return None
 
             for part in parser.parts():
                 part.close()
