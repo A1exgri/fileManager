@@ -62,13 +62,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="file-name">${filename}</span>
                     </div>
                     <div class="file-col file-col-url">
-                        <a href="http://localhost:8001/api/images/${filename}" target="_blank">
-                            http://localhost:8001/api/images/${filename}
+                        <a href="http://localhost/api/images/${filename}" target="_blank">
+                            http://localhost/api/images/${filename}
                         </a>
                     </div>
                     <div class="file-col file-col-delete">
                         <button class="delete-btn" data-filename="${filename}">
-                            <img src="../image-uploader/img/icon/delete.png" alt="delete icon">
+                            <img src="/static/image-uploader/img/icon/delete.png" alt="delete icon">
                         </button>
                     </div>
                 `;

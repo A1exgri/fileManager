@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 continue;
             }
             const data = await response.json()
-            currentUploadInput.value = `http://localhost:8001/api/images/${data.filename}`;
+            currentUploadInput.value = `http://localhost/api/images/${data.filename}`;
             alert("Files selected successfully! Go to the 'Images' tab to view them.");
         }
     };
