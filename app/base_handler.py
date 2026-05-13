@@ -11,7 +11,7 @@ class BasicHandler(BaseHTTPRequestHandler):
     server_version = '0.1'
     server_name = 'Image Hosting Server'
 
-    def response(self, data: str | bytes, content_type: str = 'text/html', status_code=200):
+    def response(self, data: str | bytes, content_type: str = 'text/html', status_code=200) -> None:
         self.send_response(status_code)
         self.send_header('Content-type', content_type)
         self.end_headers()
@@ -54,6 +54,10 @@ class BasicHandler(BaseHTTPRequestHandler):
 
     def validate_file(self, file: MultipartPart) -> bool:
         name, ext = file.filename.split('.')
+        if not ext:
+            self.response(f'Invalid file type. Allowed types {IMAGE_EXTENSIONS}', status_code=400)
+            return False
+
         if ext.lower() not in IMAGE_EXTENSIONS:
             self.response(f'Invalid file type. Allowed types {IMAGE_EXTENSIONS}', status_code=400)
             return False
@@ -83,6 +87,7 @@ class BasicHandler(BaseHTTPRequestHandler):
 
             for part in parser.parts():
                 part.close()
+        return None
 
     def upload_file(self, filename: str = None) -> str | None:
         content_type, options = parse_options_header(

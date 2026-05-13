@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 class ImageHostingHandler(BasicHandler):
     def do_GET(self):
+        logger.info(f"GET {self.client_address[0]}: {self.path}")
+
         if self.path.startswith('/api/'):
             if self.path == '/api/images':
                 self.get_images()
