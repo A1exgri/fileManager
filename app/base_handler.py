@@ -2,6 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler
 from app.settings import STATIC_PATH, MEDIA_DIR, IMAGE_EXTENSIONS, MAX_FILE_SIZE, MEDIA_PATH
 from multipart import MultipartPart, MultipartParser, parse_options_header
+from PIL import Image
 import logging
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,13 @@ class BasicHandler(BaseHTTPRequestHandler):
             return False
         if file.size > MAX_FILE_SIZE:
             self.response('The size of the uploaded files is too large', status_code=400)
+            return False
+        temp_file = f'temp.{ext}'
+        file.save_as(temp_file)
+        try:
+            with Image.open(temp_file) as img:
+                img.verify()
+        except (IOError, SyntaxError):
             return False
         return True
 
