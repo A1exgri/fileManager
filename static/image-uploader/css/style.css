@@ -270,8 +270,16 @@ body {
     flex-basis: 25%;
 }
 
+.file-col-size {
+    flex-basis: 7%;
+}
+
+.file-col-type {
+    flex-basis: 5%;
+}
+
 .file-col-url {
-    flex-basis: 50%;
+    flex-basis: 38%;
     color: #555;
     font-size: 14px;
 }
