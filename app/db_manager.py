@@ -27,7 +27,7 @@ class DBManager:
 
         self.init_tables()
 
-    def _execute(self, query, data: Params = None, fetch: bool = True, fetch_all=True):
+    def _execute(self, query, data: Params = None, fetch: bool = True, fetch_all=True) -> list | None:
         try:
             with self._connect() as conn:
                 with conn.cursor() as cur:

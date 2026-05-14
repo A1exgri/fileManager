@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const displayFiles = async () => {
         const storedFiles =
-            await fetch('/api/images')
+            await fetch('/api/images-data')
                 .then(res=>res.json())
                 .then(data => data.images);
         fileListWrapper.innerHTML = '';
@@ -49,25 +49,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             const list = document.createElement('div');
             list.id = 'file-list';
 
-            storedFiles.forEach((filename) => {
+            storedFiles.forEach((image) => {
+                const imageUrl = `${window.location.origin}/images/${image.filename}.${image.file_type}`
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-list-item';
                 fileItem.innerHTML = `
                     <div class="file-col file-col-image">
                         <span class="file-icon">
-                        <img src="/api/images/${filename}" alt="file icon" width="50">
+                        <img src="${imageUrl}" alt="file icon" width="50">
                         </span>
                     </div>
                     <div class="file-col file-col-name">
-                        <span class="file-name">${filename}</span>
+                        <span class="file-name">${image.original_name}</span>
                     </div>
                     <div class="file-col file-col-url">
-                        <a href="http://localhost/api/images/${filename}" target="_blank">
-                            http://localhost/api/images/${filename}
+                        <a href="${imageUrl}" target="_blank">
+                            ${imageUrl}
                         </a>
                     </div>
                     <div class="file-col file-col-delete">
-                        <button class="delete-btn" data-filename="${filename}">
+                        <button class="delete-btn" data-filename="${image.filename}">
                             <img src="/static/image-uploader/img/icon/delete.png" alt="delete icon">
                         </button>
                     </div>

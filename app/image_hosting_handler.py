@@ -55,20 +55,29 @@ class ImageHostingHandler(BaseHandler):
         logger.info(f'Delete{self.client_address[0]}: {self.path}')
         if self.path.startswith('/api/images/'):
             name = self.path.split('/')[-1]
-            name, file_type = name.rsplit('.', 1)
-            self.delete_image(name, file_type)
+            self.delete_image(name)
 
     def get_images_names(self):
         self.json_response({
-            'images': [self.db.get_images_names()]
+            'images': self.db.get_images_names()
         })
 
     def get_images(self):
+        images = self.db.get_images()
+        res_images = [{
+            'id': i[0],
+            'filename': i[1],
+            'original_name': i[2],
+            'size': i[3],
+            'upload_time': i[4].strftime('%Y-%m-%d %H:%M'),
+            'file_type': i[5]
+            } for i in images
+        ]
         self.json_response({
-            'images': self.db.get_images()
+            'images': res_images
         })
 
-    def delete_image(self, name: str, file_type: str):
+    def delete_image(self, name: str):
         try:
             self.db.delete_image(name)
             (MEDIA_PATH / name).unlink()
