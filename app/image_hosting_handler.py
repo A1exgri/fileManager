@@ -15,24 +15,21 @@ class ImageHostingHandler(BaseHandler):
     def do_GET(self):
         logger.info(f"GET {self.client_address[0]}: {self.path}")
 
-        if self.path.startswith('/api/'):
-            if self.path == '/api/images':
-                self.get_images_names()
-            if self.path == '/api/images-data':
-                self.get_images()
-            elif self.path.startswith('/api/images/'):
-                name = self.path.split("/")[-1]
-                self.send_media_file(name)
+        api_handlers = {
+            '/api/images': self.get_images_names,
+            '/api/images-data': self.get_images,
+        }
 
-        elif self.path == '/':
-            self.template_response('index.html')
-        elif self.path == '/upload':
-            self.template_response('upload.html')
-        elif self.path == '/images':
-            self.template_response('images.html')
+        templates = {
+            '/': 'index.html',
+            '/upload': 'upload.html',
+            '/images': 'images.html'
+        }
 
-        # elif any(self.path.endswith(ext) for ext in ['.css', '.js', '.png']):
-        #     self.send_static_file(self.path)
+        if self.path in templates:
+            self.template_response(templates[self.path])
+        elif self.path in api_handlers:
+            api_handlers[self.path]()
         else:
             self.html_response('Not Found', status_code=404)
 
