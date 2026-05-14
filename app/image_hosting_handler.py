@@ -1,18 +1,26 @@
 import logging
-import uuid
-
-from app.base_handler import BasicHandler
+from psycopg.errors import DatabaseError
+from app.base_handler import BaseHandler
+from app.db_manager import DBManager
 from app.settings import MEDIA_PATH
 
 logger = logging.getLogger(__name__)
 
 
-class ImageHostingHandler(BasicHandler):
+class ImageHostingHandler(BaseHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.db: DBManager = DBManager()
+
     def do_GET(self):
+        self.db: DBManager = DBManager()
+
         logger.info(f"GET {self.client_address[0]}: {self.path}")
 
         if self.path.startswith('/api/'):
             if self.path == '/api/images':
+                self.get_images_names()
+            if self.path == '/api/images-data':
                 self.get_images()
             elif self.path.startswith('/api/images/'):
                 name = self.path.split("/")[-1]
@@ -31,39 +39,49 @@ class ImageHostingHandler(BasicHandler):
             self.html_response('Not Found', status_code=404)
 
     def do_POST(self):
+        self.db: DBManager = DBManager()
+
         logger.info(f"POST {self.client_address[0]}: {self.path}")
         if self.path == '/api/upload':
-            unique_id = str(uuid.uuid4())
-            filename = self.upload_file(unique_id)
-            if filename:
+            image_dict = self.upload_file()
+            if image_dict:
+                self.db.add_image(image_dict)
                 self.json_response({
                     'message': 'File uploaded successfully',
-                    'filename': filename
+                    'image': image_dict
                 }, status_code=201)
             else:
-                self.json_response({'message': 'Invalid file type or file size'}, status_code=404)
+                self.json_response({'message': 'Invalid file type or file size'}, status_code=400)
         else:
             self.html_response("Method Not Allowed", status_code=404)
 
     def do_DELETE(self):
+        self.db: DBManager = DBManager()
+
         logger.info(f'Delete{self.client_address[0]}: {self.path}')
         if self.path.startswith('/api/images/'):
             name = self.path.split('/')[-1]
             self.delete_image(name)
 
-    def get_images(self):
+    def get_images_names(self):
         self.json_response({
-            'images': [f.name for f in MEDIA_PATH.iterdir() if f.name != ".gitkeep"]
+            'images': [self.db.get_images_names()]
         })
 
-    def delete_image(self, name):
+    def get_images(self):
+        self.json_response({
+            'images': self.db.get_images()
+        })
+
+    def delete_image(self, name: str):
         try:
+            self.db.delete_image(name)
             (MEDIA_PATH / name).unlink()
             logger.info(f'Image {name} deleted successfully')
             self.json_response({'message': 'Image deleted successfully'}, status_code=204)
         except FileNotFoundError:
-            logger.info(f'Image {name} not found (on delete)')
+            logger.info(f'File {name} not found (on delete)')
             self.json_response({'message': 'Image not found'}, status_code=404)
-
-
-
+        except DatabaseError as e:
+            logger.info(f'Image {name} not found on database (on delete)')
+            self.json_response({'message': 'Image not found'}, status_code=404)

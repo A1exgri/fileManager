@@ -1,5 +1,8 @@
 import json
+from uuid import uuid4
 from http.server import BaseHTTPRequestHandler
+from pathlib import Path
+
 from app.settings import STATIC_PATH, MEDIA_DIR, IMAGE_EXTENSIONS, MAX_FILE_SIZE, MEDIA_PATH
 from multipart import MultipartPart, MultipartParser, parse_options_header
 from PIL import Image
@@ -8,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class BasicHandler(BaseHTTPRequestHandler):
+class BaseHandler(BaseHTTPRequestHandler):
     server_version = '0.1'
     server_name = 'Image Hosting Server'
 
@@ -71,7 +74,7 @@ class BasicHandler(BaseHTTPRequestHandler):
             return False
         return True
 
-    def parse_multipart(self, content_type: str, options: dict, content_length: int, filename: str = None) -> str | None:
+    def parse_multipart(self, content_type: str, options: dict, content_length: int) -> dict | None:
         if content_type == "multipart/form-data" and "boundary" in options:
             parser = MultipartParser(
                 self.rfile,
@@ -81,11 +84,18 @@ class BasicHandler(BaseHTTPRequestHandler):
 
             for part in parser:
                 if self.validate_file(part):
-                    logger.info(f'{part.name}: File upload ({part.size}) bytes')
-                    ext = part.filename.split('.')[-1] if '.' in part.filename else ''
-                    file = f"{filename}.{ext}" if filename else part.filename
+                    unique_name = str(uuid4())
+                    logger.info(f'{part.filename}: File upload ({part.size}) bytes')
+                    ext = Path(part.filename).suffix
+                    file = f"{unique_name}{ext}"
                     part.save_as(f'{MEDIA_DIR}/{file}')
-                    return file
+                    image_dict = {
+                        'filename': unique_name,
+                        'original_name': part.filename,
+                        'size': part.size // 1024,
+                        'file_type': ext.lstrip('.')
+                    }
+                    return image_dict
                 else:
                     logger.info(f'Invalid file type image {part.name}')
                     return None
@@ -94,10 +104,10 @@ class BasicHandler(BaseHTTPRequestHandler):
                 part.close()
         return None
 
-    def upload_file(self, filename: str = None) -> str | None:
+    def upload_file(self) -> dict | None:
         content_type, options = parse_options_header(
             self.headers['Content-Type']
         )
         content_length = int(self.headers['Content-Length'])
-        return self.parse_multipart(content_type, options, content_length, filename)
+        return self.parse_multipart(content_type, options, content_length)
         
