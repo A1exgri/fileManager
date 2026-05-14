@@ -1,5 +1,5 @@
 import logging
-from psycopg.errors import DatabaseError
+from psycopg import DatabaseError
 from app.base_handler import BaseHandler
 from app.db_manager import DBManager
 from app.settings import MEDIA_PATH
@@ -9,12 +9,10 @@ logger = logging.getLogger(__name__)
 
 class ImageHostingHandler(BaseHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.db: DBManager = DBManager()
+        super().__init__(*args, **kwargs)
 
     def do_GET(self):
-        self.db: DBManager = DBManager()
-
         logger.info(f"GET {self.client_address[0]}: {self.path}")
 
         if self.path.startswith('/api/'):
@@ -39,8 +37,6 @@ class ImageHostingHandler(BaseHandler):
             self.html_response('Not Found', status_code=404)
 
     def do_POST(self):
-        self.db: DBManager = DBManager()
-
         logger.info(f"POST {self.client_address[0]}: {self.path}")
         if self.path == '/api/upload':
             image_dict = self.upload_file()
@@ -56,12 +52,11 @@ class ImageHostingHandler(BaseHandler):
             self.html_response("Method Not Allowed", status_code=404)
 
     def do_DELETE(self):
-        self.db: DBManager = DBManager()
-
         logger.info(f'Delete{self.client_address[0]}: {self.path}')
         if self.path.startswith('/api/images/'):
             name = self.path.split('/')[-1]
-            self.delete_image(name)
+            name, file_type = name.rsplit('.', 1)
+            self.delete_image(name, file_type)
 
     def get_images_names(self):
         self.json_response({
@@ -73,7 +68,7 @@ class ImageHostingHandler(BaseHandler):
             'images': self.db.get_images()
         })
 
-    def delete_image(self, name: str):
+    def delete_image(self, name: str, file_type: str):
         try:
             self.db.delete_image(name)
             (MEDIA_PATH / name).unlink()
