@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="file-name">${image.file_type}</span>
                     </div>
                     <div class="file-col file-col-delete">
-                        <button class="delete-btn" data-filename="${image.filename}">
+                        <button class="delete-btn" data-filename="${image.filename}.${image.file_type}">
                             <img src="/static/image-uploader/img/icon/delete.png" alt="delete icon">
                         </button>
                     </div>

@@ -55,7 +55,8 @@ class ImageHostingHandler(BaseHandler):
         logger.info(f'Delete{self.client_address[0]}: {self.path}')
         if self.path.startswith('/api/images/'):
             name = self.path.split('/')[-1]
-            self.delete_image(name)
+            name, file_type = name.rsplit('.', 1)
+            self.delete_image(name, file_type)
 
     def get_images_names(self):
         self.json_response({
@@ -77,10 +78,10 @@ class ImageHostingHandler(BaseHandler):
             'images': res_images
         })
 
-    def delete_image(self, name: str):
+    def delete_image(self, name: str, file_type: str):
         try:
             self.db.delete_image(name)
-            (MEDIA_PATH / name).unlink()
+            (MEDIA_PATH / (name + '.' + file_type)).unlink()
             logger.info(f'Image {name} deleted successfully')
             self.json_response({'message': 'Image deleted successfully'}, status_code=204)
         except FileNotFoundError:
