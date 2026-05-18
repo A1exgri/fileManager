@@ -25,10 +25,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const displayFiles = async () => {
-        const storedFiles =
-            await fetch('/api/images-data')
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || 1;
+        const response =
+            await fetch(`/api/images-data?page=${page}`)
                 .then(res=>res.json())
-                .then(data => data.images);
+
+        const storedFiles = response.images
+
+        const prevPage = document.getElementById('prev-page-btn');
+        const nextPage = document.getElementById('next-page-btn');
+        prevPage.href = `/images?page=${Number(page) - 1}`
+        nextPage.href = `/images?page=${Number(page) + 1}`
+        prevPage.disabled = Number(page) === 1
+
+        const currentPage = document.getElementById('current-page-btn')
+        currentPage.innerText = page;
         fileListWrapper.innerHTML = '';
 
         if (storedFiles.length === 0) {

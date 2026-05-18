@@ -228,10 +228,9 @@ body {
 /* Container for the entire table */
 .file-list-container {
     max-width: 800px;
-    margin: 0 auto;
+    margin: 0 auto 40px;
     padding: 20px;
     border-radius: 8px;
-    margin-bottom: 292px;
 }
 
 /* Common style for a row (both header and list item) */

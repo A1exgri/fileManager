@@ -21,3 +21,5 @@ IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif']
 MAX_FILE_SIZE_MB = 5
 MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
 
+IMAGES_LIMIT = os.getenv('IMAGES_LIMIT', 5)
+

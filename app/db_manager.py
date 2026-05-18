@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from psycopg.abc import Params
 
 from app.QUERIES import ADD_IMAGE, GET_IMAGES_NAMES, DELETE_IMAGE_BY_NAME, GET_ALL_IMAGES, CREATE_TABLE
+from app.settings import IMAGES_LIMIT
 
 load_dotenv()
 
@@ -65,8 +66,9 @@ class DBManager:
     def get_images_names(self):
         return self.fetch_all(GET_IMAGES_NAMES)
 
-    def get_images(self):
-        return self.fetch_all(GET_ALL_IMAGES)
+    def get_images(self, page: int):
+        offset = (page - 1) * IMAGES_LIMIT
+        return self.fetch_all(GET_ALL_IMAGES, data=(offset,))
 
     def delete_image(self, name):
         self.execute(DELETE_IMAGE_BY_NAME, (name,))

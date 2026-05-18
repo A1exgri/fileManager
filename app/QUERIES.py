@@ -1,3 +1,5 @@
+from app.settings import IMAGES_LIMIT
+
 CREATE_TABLE = '''CREATE TABLE IF NOT EXISTS images (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     filename TEXT NOT NULL,
@@ -17,7 +19,7 @@ DELETE FROM images WHERE filename = %s
 '''
 
 GET_ALL_IMAGES = '''
-SELECT * from images
+SELECT * from images LIMIT {IMAGES_LIMIT} OFFSET %s
 '''
 
 GET_IMAGES_NAMES = '''
