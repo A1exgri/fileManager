@@ -1,32 +1,26 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'F5' || event.key === 'Escape') {
-            event.preventDefault();
-            window.location.href = '/upload';
-        }
-    });
+
     const fileListWrapper = document.getElementById('file-list-wrapper');
     const uploadRedirectButton = document.getElementById('upload-tab-btn');
 
     const updateTabStyles = () => {
         const uploadTab = document.getElementById('upload-tab-btn');
         const imagesTab = document.getElementById('images-tab-btn');
-
-        const isImagesPage = window.location.pathname.includes('images');
-
-        uploadTab.classList.remove('upload__tab--active');
-        imagesTab.classList.remove('upload__tab--active');
+        let isImagesPage = window.location.pathname.includes('images') || false;
 
         if (isImagesPage) {
             imagesTab.classList.add('upload__tab--active');
+            uploadTab.classList.remove('upload__tab--active');
         } else {
             uploadTab.classList.add('upload__tab--active');
+            imagesTab.classList.remove('upload__tab--active');
         }
     };
 
     const displayFiles = async () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const page = urlParams.get('page') || 1;
+        let page = urlParams.get('page');
+        if (!page || Number(page) < 1) window.location.href = `/images?page=1`
         const response =
             await fetch(`/api/images-data?page=${page}`)
                 .then(res=>res.json())
@@ -35,16 +29,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const prevPage = document.getElementById('prev-page-btn');
         const nextPage = document.getElementById('next-page-btn');
-        prevPage.href = `/images?page=${Number(page) - 1}`
+        prevPage.href = page > 1 ? `/images?page=${Number(page) - 1}` : ''
         nextPage.href = `/images?page=${Number(page) + 1}`
-        prevPage.disabled = Number(page) === 1
+
+        if (Number(page) === 1) prevPage.classList.add('disabled')
+        else prevPage.classList.remove('disabled')
+        if (response?.has_next) nextPage.classList.remove('disabled')
+        else nextPage.classList.add('disabled')
 
         const currentPage = document.getElementById('current-page-btn')
         currentPage.innerText = page;
         fileListWrapper.innerHTML = '';
 
         if (storedFiles.length === 0) {
+            if (Number(page) > 1) {
+                window.locationhref = `/images?page=${Number(page) - 1}`
+            }
             fileListWrapper.innerHTML = '<p class="upload__promt" style="text-align: center; margin-top: 50px;">No images uploaded yet.</p>';
+            const paginationWrapper = document.getElementById('pagination-wrapper');
+            paginationWrapper.style.display = 'none'
         } else {
             const container = document.createElement('div');
             container.className = 'file-list-container';

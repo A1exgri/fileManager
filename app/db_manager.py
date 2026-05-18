@@ -1,11 +1,12 @@
 import os
+from math import ceil
 from typing import Optional
 from psycopg import Connection, connect, OperationalError, ProgrammingError
 from psycopg.rows import tuple_row
 from dotenv import load_dotenv
 from psycopg.abc import Params
 
-from app.QUERIES import ADD_IMAGE, GET_IMAGES_NAMES, DELETE_IMAGE_BY_NAME, GET_ALL_IMAGES, CREATE_TABLE
+from app.QUERIES import ADD_IMAGE, GET_IMAGES_NAMES, DELETE_IMAGE_BY_NAME, GET_ALL_IMAGES, CREATE_TABLE, GET_ALL_IMAGES_COUNT
 from app.settings import IMAGES_LIMIT
 
 load_dotenv()
@@ -34,9 +35,8 @@ class DBManager:
                 with conn.cursor() as cur:
                     cur.execute(query, data)
                     if fetch:
-                        result = cur.fetchall() if fetch_all else cur.fetchone()
-                        return result
-            self._connection = None
+                        return cur.fetchall() if fetch_all else cur.fetchone()
+                    return None
 
         except OperationalError as e:
             print(f"Unable to connect {e.pgresult}")
@@ -67,8 +67,8 @@ class DBManager:
         return self.fetch_all(GET_IMAGES_NAMES)
 
     def get_images(self, page: int):
-        offset = (page - 1) * IMAGES_LIMIT
-        return self.fetch_all(GET_ALL_IMAGES, data=(offset,))
+        offset = (page - 1) * int(IMAGES_LIMIT)
+        return self.fetch_all(GET_ALL_IMAGES, data={'offset': offset, 'limit': IMAGES_LIMIT})
 
     def delete_image(self, name):
         self.execute(DELETE_IMAGE_BY_NAME, (name,))
@@ -76,4 +76,10 @@ class DBManager:
     def init_tables(self):
         self.execute(CREATE_TABLE)
 
+    def has_next(self, page: int):
+        result = self.fetch_one(GET_ALL_IMAGES_COUNT)
+        if not result:
+            return False
 
+        images_count = result[0]
+        return ceil(images_count / int(IMAGES_LIMIT)) > page

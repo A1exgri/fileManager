@@ -98,6 +98,7 @@ body {
 
 .upload__tab {
     all: unset;
+    cursor:pointer;
     font-size: 20px;
     font-weight: bold;
     color: rgb(173, 192, 248); /* Неактивный цвет по умолчанию */
